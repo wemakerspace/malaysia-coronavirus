@@ -6,12 +6,12 @@
       AstraZeneca, Sinovac, etc.).
     </p>
     <p>
-      <b>{{ vaccinations.first.toLocaleString() }}</b> people had been given a
-      first dose by the end of {{ vaccinations.latestDate }}.
+      <b>{{ data.dose1_cumul.toLocaleString() }}</b> people had been given a
+      first dose by the end of {{ formatDate(data.latest_date) }}.
     </p>
     <p>
-      <b>{{ vaccinations.second.toLocaleString() }}</b> people had been given a
-      second dose by the end of {{ vaccinations.latestDate }}.
+      <b>{{ data.dose2_cumul.toLocaleString() }}</b> people had been given a
+      second dose by the end of {{ formatDate(data.latest_date) }}.
     </p>
   </div>
 </template>

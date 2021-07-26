@@ -1,42 +1,25 @@
 export default {
+  props: {
+    data: Object,
+  },
   methods: {
     compareText(value) {
       if (value > 0) return "an increase";
       if (value < 0) return "a decrease";
       return "no change";
     },
-  },
-  computed: {
-    testing() {
-      return {
-        latestValue: 1013261,
-        latestDate: "22 July 2021",
-        changePercentage: -4.9,
-        betweenDate: "16 July 2021",
-        betweetValue: 6813085,
-      };
+    formatDate(value) {
+      if (!value) return value;
+      return new Date(value).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
     },
-    cases() {
-      return {
-        latestValue: 31795,
-        latestDate: "24 July 2021",
-        changePercentage: -4.5,
-        betweenDate: "18 July 2021",
-        betweetValue: 286863,
-      };
-    },
-    vaccinations() {
-      return {
-        first: 46519998,
-        second: 36953691,
-        latestDate: "23 July 2021",
-      };
-    },
-    healthcare() {
-      return {};
-    },
-    deaths() {
-      return {};
+    sevenDaysAgo(value) {
+      const d = new Date(value);
+      const newDate = d.setDate(d.getDate() - 7);
+      return this.formatDate(newDate);
     },
   },
 };

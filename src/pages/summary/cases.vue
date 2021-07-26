@@ -3,17 +3,18 @@
     <h3 id="cases">Cases</h3>
     <p>A confirmed case is someone who has tested positive for coronavirus.</p>
     <p>
-      <b>{{ cases.latestValue.toLocaleString() }}</b> new people had a confirmed
-      positive test result reported on {{ cases.latestDate }}.
+      <b>{{ data.latest_value.toLocaleString() }}</b>
+      new people had a confirmed positive test result reported on
+      {{ formatDate(data.latest_date) }}.
     </p>
     <p>
-      Between {{ cases.betweenDate }} and {{ cases.latestDate }},
-      <b>{{ cases.betweetValue.toLocaleString() }}</b> people had a confirmed
-      positive test result. This shows
-      {{ compareText(cases.changePercentage) }}
-      <template v-if="cases.changePercentage !== 0"
-        >of <b>{{ cases.changePercentage }}%</b></template
-      >
+      Between {{ sevenDaysAgo(data.latest_date) }} and
+      {{ formatDate(data.latest_date) }},
+      <b>{{ data.current_seven_days_total.toLocaleString() }}</b> people had a
+      confirmed positive test result. This shows {{ compareText(data.change) }}
+      <template v-if="data.change !== 0">
+        of <b>{{ data.change.toFixed(1) }}%</b>
+      </template>
       compared to the previous 7 days.
     </p>
   </div>
