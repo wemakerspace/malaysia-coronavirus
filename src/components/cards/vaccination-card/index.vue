@@ -1,16 +1,16 @@
 <template>
-  <div class="vaccination-card w-full bg-gray-100 p-6 grid gap-10">
+  <div class="vaccination-card w-full bg-gray-100 p-4 grid gap-10">
     <div class="flex flex-col">
       <div class="text-gray-700">Vaccinations</div>
-      <h3 class="text-2xl font-bold">People vaccinated</h3>
+      <h3 class="text-xl font-semibold mb-2">People vaccinated</h3>
       <div class="text-gray-700 text-sm flex-1">
         Up to and including 23 July 2021
       </div>
-      <div>All vaccination data</div>
+      <div class="font-medium">All vaccination data</div>
     </div>
     <div class="w-full grid grid-cols-2 gap-8">
       <div>
-        <div>Daily — 1st dose</div>
+        <div class="text-sm">Daily — 1st dose</div>
         <span
           class="
             has-tooltip
@@ -25,7 +25,7 @@
         </div>
       </div>
       <div>
-        <div>Daily — 2nd dose</div>
+        <div class="text-sm">Daily — 2nd dose</div>
         <span
           class="
             has-tooltip
@@ -40,7 +40,7 @@
         </div>
       </div>
       <div>
-        <div>Total — 1st dose</div>
+        <div class="text-sm">Total — 1st dose</div>
         <span
           class="
             has-tooltip
@@ -56,7 +56,7 @@
         </div>
       </div>
       <div>
-        <div>Total — 2nd dose</div>
+        <div class="text-sm">Total — 2nd dose</div>
         <span
           class="
             has-tooltip
@@ -91,7 +91,7 @@
           </div>
           <div class="flex flex-row items-center justify-end mt-2">
             <div class="legend bg-green-500 mr-1" />
-            <div>1st Dose</div>
+            <div class="text-sm">1st Dose</div>
           </div>
         </div>
         <div class="mb-2 tooltip-right">
@@ -111,7 +111,7 @@
           </div>
           <div class="flex flex-row items-center justify-end mt-2">
             <div class="legend bg-green-800 mr-1" />
-            <div>2nd Dose</div>
+            <div class="text-sm">2nd Dose</div>
           </div>
         </div>
       </div>
@@ -121,7 +121,7 @@
 </template>
 
 <script>
-import GridChart from "../../components/grid-chart/index.vue";
+import GridChart from "@/components/grid-chart/index.vue";
 
 export default {
   components: {

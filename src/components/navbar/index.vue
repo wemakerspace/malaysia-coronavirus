@@ -1,11 +1,12 @@
 <template>
-  <div class="w-60 pr-4">
-    <!-- <router-link
+  <div class="w-60 pr-4 pt-2">
+    <router-link
       to="/"
       class="block p-2 pl-4 border-l-4 border-transparent hover:border-gray-500"
       active-class="border-black bg-gray-200 font-bold"
-    >Daily update</router-link>
-    <router-link
+      >Daily update</router-link
+    >
+    <!-- <router-link
       to="/testing"
       class="block p-2 pl-4 border-l-4 border-transparent hover:border-gray-500"
       active-class="border-black bg-gray-200 font-bold"

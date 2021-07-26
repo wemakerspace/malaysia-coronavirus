@@ -2,8 +2,8 @@
   <div>
     <header-element />
     <main class="w-full flex px-4 py-2 lg:px-6 lg:py-4">
-      <!-- <navbar-element /> -->
-      <div class="w-full">
+      <navbar-element />
+      <div class="w-full p-2">
         <router-view />
       </div>
     </main>
@@ -14,13 +14,13 @@
 <script>
 import Header from "./components/header/index.vue";
 import Footer from "./components/footer/index.vue";
-// import NavBar from "./components/navbar/index.vue";
+import NavBar from "./components/navbar/index.vue";
 
 export default {
   components: {
     "header-element": Header,
     "footer-element": Footer,
-    // "navbar-element": NavBar,
+    "navbar-element": NavBar,
   },
 };
 </script>
