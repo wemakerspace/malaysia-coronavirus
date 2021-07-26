@@ -6,21 +6,6 @@
       <small>for</small>
       Malaysia
     </h2>
-    <div>
-      <p>
-        This information comes from the Malaysia Government. (<a
-          href="https://github.com/cITF-Malaysia/citf-public/"
-          class="underline"
-          >Here</a
-        >, and
-        <a
-          href="https://github.com/MoH-Malaysia/covid19-public"
-          class="underline"
-          >here</a
-        >)
-      </p>
-      <!-- <p>This document explains the key statistics presented on the <b>Malaysia Coronavirus (COVID-19) Dashboard</b>.</p> -->
-    </div>
 
     <h3>Contents</h3>
     <ul class="pl-4">
@@ -111,19 +96,19 @@ export default {
 <style lang="scss">
 .summary {
   h1 {
-    @apply text-4xl font-bold text-center mb-6;
+    @apply text-3xl lg:text-4xl font-bold text-center mb-6;
   }
   h2 {
-    @apply text-2xl font-bold text-center mb-8;
+    @apply text-xl lg:text-2xl font-bold text-center mb-8;
   }
   h2 small {
-    @apply block my-0 text-lg leading-6 text-gray-500;
+    @apply lg:text-lg block my-0 leading-6 text-gray-500;
   }
   h3 {
-    @apply text-2xl mt-12 mb-2 font-bold;
+    @apply text-xl lg:text-2xl mt-8 lg:mt-12 mb-2 font-bold;
   }
   p {
-    @apply my-4 text-lg;
+    @apply lg:text-lg my-4 leading-6;
   }
   ul {
     li {
@@ -135,7 +120,7 @@ export default {
       }
 
       a {
-        @apply font-semibold underline;
+        @apply lg:text-lg font-semibold underline;
       }
     }
   }

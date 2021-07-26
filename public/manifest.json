@@ -1,0 +1,16 @@
+{
+  "short_name": "COVID-19 Dashboard",
+  "name": "Malaysia COVID-19 Dashboard",
+  "description": "Unofficial Coronavirus (COVID-19) disease situation dashboard with latest data in Malaysia.",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
