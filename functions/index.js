@@ -3,12 +3,18 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const fetch = require("node-fetch");
 const Papa = require("papaparse");
+const {CanvasRenderService} = require("chartjs-node-canvas");
+const imagemin = require("imagemin");
+const imageminPngquant = require("imagemin-pngquant");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
+  storageBucket: "gs://malaysia-coronavirus.appspot.com",
   databaseURL: "https://malaysia-coronavirus-default-rtdb.asia-southeast1.firebasedatabase.app",
 });
+
 const db = admin.database();
+const storage = admin.storage();
 
 const githubBaseUrl = "https://raw.githubusercontent.com/";
 
@@ -350,16 +356,123 @@ exports.syncGithub = functions.https.onRequest(async (req, res) => {
   }
 });
 
+const uploadFile = async (file, fileName) => {
+  const bucket = storage.bucket();
+  const destination = `images/${fileName}`;
+  const buffer = Buffer.from(file.split(",")[1], "base64");
+  const output = await imagemin.buffer(buffer, {
+    plugins: [imageminPngquant({quality: [0.3, 0.5]})],
+  });
+
+  await bucket
+      .file(destination)
+      .save(output, {
+        public: true,
+        gzip: true,
+        metadata: {
+          cacheControl: "public, max-age=31536000",
+          contentType: "image/png",
+          contentEncoding: "gzip",
+        },
+      });
+
+  await bucket.file(destination).makePublic();
+
+  const baseUrl = "https://firebasestorage.googleapis.com/v0/b/";
+  return `${baseUrl}${bucket.name}/o/${encodeURIComponent(destination)}?alt=media`;
+};
+
+const generateSummaryChart = async (data, summary) => {
+  const width = 700;
+  const height = 350;
+  const chartJSNodeCanvas = new CanvasRenderService(
+      width,
+      height,
+  );
+  const labels = data.slice(7, -7).map((e) => {
+    const d = new Date(e[0]);
+    if (d.getDate() !== 1) return "";
+    return d.toLocaleString("en", {month: "short"});
+  });
+  const first = [];
+  const second = [];
+  for (let i = 7; i < data.length - 7; i++) {
+    let total = 0;
+    for (let j = i - 7; j < i + 7; j++) {
+      total += data[j][1];
+    }
+    const average = total / (7 * 2);
+    const k = data.length - i - 7;
+    if (k >= 7) {
+      first[i - 7] = average;
+      second[i - 7] = k === 7 ? average : null;
+    } else {
+      first[i - 7] = null;
+      second[i - 7] = average;
+    }
+  }
+  const config = {
+    type: "svg",
+    data: {
+      labels,
+      datasets: [{
+        type: "line",
+        data: first,
+        pointRadius: 0,
+        borderWidth: 2,
+        borderColor: "black",
+        backgroundColor: "transparent",
+      }, {
+        type: "line",
+        data: second,
+        pointRadius: 0,
+        borderWidth: 2,
+        borderColor: "black",
+        backgroundColor: "transparent",
+        // borderColor: summary.change >= 0 ? "#94261c" : "#265b31",
+        // backgroundColor: summary.change >= 0 ? "#f6d7d2" : "#cce2d8",
+      }],
+    },
+    options: {
+      legend: {
+        display: false,
+      },
+      scales: {
+        xAxes: [{
+          gridLines: {
+            display: false,
+          },
+          ticks: {
+            stepSize: 7,
+            min: 0,
+            autoSkip: false,
+            maxRotation: 0,
+            minRotation: 0,
+            fontColor: "#424242",
+            fontSize: 22,
+            fontStyle: 500,
+          },
+        }],
+        yAxes: [{
+          display: false,
+        }],
+      },
+    },
+  };
+  const img = await chartJSNodeCanvas.renderToDataURL(config);
+  return img;
+};
+
 const computeSummary = (data) => {
-  const currSevenDaysTot = data.slice(7, 14)
+  const currSevenDaysTot = data.slice(-7)
       .reduce((acc, cur) => acc + cur[1], 0);
-  const prevSevenDaysTot = data.slice(0, 6)
+  const prevSevenDaysTot = data.slice(data.length - 14, -7)
       .reduce((acc, cur) => acc + cur[1], 0);
   const change = (currSevenDaysTot - prevSevenDaysTot) / prevSevenDaysTot * 100;
   return {
-    latest_date: data[13][0],
-    latest_value: data[13][1],
-    oldest_date: data[0][0],
+    latest_date: data[data.length - 1][0],
+    latest_value: data[data.length - 1][1],
+    oldest_date: data[data.length - 14][0],
     current_seven_days_total: currSevenDaysTot,
     previous_seven_days_total: prevSevenDaysTot,
     change,
@@ -368,13 +481,15 @@ const computeSummary = (data) => {
 
 const getTestingSummary = async () => {
   const ref = db.ref("data/testing/malaysia");
-  const snapshot = await ref.limitToLast(14).once("value");
+  const snapshot = await ref.limitToLast(180).once("value");
   const data = [];
   snapshot.forEach((e) => {
     const value = e.val();
     data.push([e.key, value.pcr + value["rtk-ag"]]);
   });
   const summary = computeSummary(data);
+  const chart = await generateSummaryChart(data, summary);
+  summary.imageUrl = await uploadFile(chart, `summary/testing/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/testing");
   await summaryRef.set(summary);
   return summary;
@@ -382,13 +497,15 @@ const getTestingSummary = async () => {
 
 const getCasesSummary = async () => {
   const ref = db.ref("data/cases/malaysia");
-  const snapshot = await ref.limitToLast(14).once("value");
+  const snapshot = await ref.limitToLast(180).once("value");
   const data = [];
   snapshot.forEach((e) => {
     const value = e.val();
     data.push([e.key, value.cases_new]);
   });
   const summary = computeSummary(data);
+  const chart = await generateSummaryChart(data, summary);
+  summary.imageUrl = await uploadFile(chart, `summary/cases/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/cases");
   await summaryRef.set(summary);
   return summary;
@@ -396,13 +513,15 @@ const getCasesSummary = async () => {
 
 const getDeathsSummary = async () => {
   const ref = db.ref("data/deaths/malaysia");
-  const snapshot = await ref.limitToLast(14).once("value");
+  const snapshot = await ref.limitToLast(180).once("value");
   const data = [];
   snapshot.forEach((e) => {
     const value = e.val();
     data.push([e.key, value.deaths_new]);
   });
   const summary = computeSummary(data);
+  const chart = await generateSummaryChart(data, summary);
+  summary.imageUrl = await uploadFile(chart, `summary/deaths/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/deaths");
   await summaryRef.set(summary);
   return summary;
@@ -410,36 +529,91 @@ const getDeathsSummary = async () => {
 
 const getVaccinationsSummary = async () => {
   const ref = db.ref("data/vaccinations/malaysia");
-  const snapshot = await ref.limitToLast(1).once("value");
+  const snapshot = await ref.limitToLast(180).once("value");
   const data = [];
   snapshot.forEach((e) => {
     const value = e.val();
-    data.push([e.key, value]);
+    data.push([e.key, value.dose1_daily + value.dose2_daily, value]);
   });
   const summary = {
-    latest_date: data[0][0],
-    ...data[0][1],
+    ...computeSummary(data),
+    ...data[data.length - 1][2],
   };
+  const chart = await generateSummaryChart(data, summary);
+  summary.imageUrl = await uploadFile(chart, `summary/vaccinations/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/vaccinations");
   await summaryRef.set(summary);
   return summary;
 };
 
+const getHospitalSummary = async () => {
+  const ref = db.ref("data/healthcare/hospital/malaysia");
+  const snapshot = await ref.limitToLast(180).once("value");
+  const data = [];
+  snapshot.forEach((e) => {
+    const value = e.val();
+    data.push([e.key, value.admitted_covid + value.admitted_pui]);
+  });
+  const summary = computeSummary(data);
+  const chart = await generateSummaryChart(data, summary);
+  summary.imageUrl = await uploadFile(chart, `summary/healthcare/hospital/${summary.latest_date}.png`);
+  const summaryRef = db.ref("summary/healthcare/hospital");
+  await summaryRef.set(summary);
+  return summary;
+};
+
+const getICUSummary = async () => {
+  const ref = db.ref("data/healthcare/icu/malaysia");
+  const snapshot = await ref.limitToLast(180).once("value");
+  const data = [];
+  snapshot.forEach((e) => {
+    const value = e.val();
+    data.push([e.key, value.icu_covid + value.icu_pui]);
+  });
+  const summary = computeSummary(data);
+  const chart = await generateSummaryChart(data, summary);
+  summary.imageUrl = await uploadFile(chart, `summary/healthcare/icu/${summary.latest_date}.png`);
+  const summaryRef = db.ref("summary/healthcare/icu");
+  await summaryRef.set(summary);
+  return summary;
+};
+
+const getPKRCSummary = async () => {
+  const ref = db.ref("data/healthcare/pkrc/malaysia");
+  const snapshot = await ref.limitToLast(180).once("value");
+  const data = [];
+  snapshot.forEach((e) => {
+    const value = e.val();
+    data.push([e.key, value.admitted_total]);
+  });
+  const summary = computeSummary(data);
+  const chart = await generateSummaryChart(data, summary);
+  summary.imageUrl = await uploadFile(chart, `summary/healthcare/pkrc/${summary.latest_date}.png`);
+  const summaryRef = db.ref("summary/healthcare/pkrc");
+  await summaryRef.set(summary);
+  return summary;
+};
+
 exports.generateSummaryReport = functions.https.onRequest(async (req, res) => {
-  const testing = await getTestingSummary();
-  const cases = await getCasesSummary();
-  const deaths = await getDeathsSummary();
-  const vaccinations = await getVaccinationsSummary();
+  const promises = await Promise.all([
+    getTestingSummary(),
+    getCasesSummary(),
+    getDeathsSummary(),
+    getVaccinationsSummary(),
+    getHospitalSummary(),
+    getICUSummary(),
+    getPKRCSummary(),
+  ]);
   const result = {
-    testing,
-    cases,
-    deaths,
-    vaccinations,
-    // healthcare: {
-    //   hospital: {},
-    //   icu: {},
-    //   pkrc: {},
-    // },
+    testing: promises[0],
+    cases: promises[1],
+    deaths: promises[2],
+    vaccinations: promises[3],
+    healthcare: {
+      hospital: promises[4],
+      icu: promises[5],
+      pkrc: promises[6],
+    },
   };
   res.send(result);
 });
