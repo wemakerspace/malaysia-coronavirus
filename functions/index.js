@@ -1,4 +1,3 @@
-const serviceAccount = require("./serviceaccount.json");
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const fetch = require("node-fetch");
@@ -8,19 +7,16 @@ const imagemin = require("imagemin");
 const imageminPngquant = require("imagemin-pngquant");
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: "gs://malaysia-coronavirus.appspot.com",
-  databaseURL: "https://malaysia-coronavirus-default-rtdb.asia-southeast1.firebasedatabase.app",
+  storageBucket: functions.config().config.storagebucket,
+  databaseURL: functions.config().config.databaseurl,
 });
 
 const db = admin.database();
 const storage = admin.storage();
 
-const githubBaseUrl = "https://raw.githubusercontent.com/";
-
-Papa.parsePromise = async (url) => {
-  const req = await fetch(url);
-  const text = await req.text();
+Papa.parsePromise = async (content) => {
+  const buff = Buffer.from(content, "base64");
+  const text = buff.toString("ascii");
   return new Promise(function(complete, error) {
     Papa.parse(text, {
       transformHeader: (header) => header.trim(),
@@ -32,9 +28,25 @@ Papa.parsePromise = async (url) => {
   });
 };
 
+const getRepoContent = async (repo, file) => {
+  const baseUrl = `https://api.github.com/repos/${repo}/contents`;
+  const req = await fetch(`${baseUrl}/${file}`, {
+    headers: {
+      "Authorization": `token ${functions.config().config.githubtoken}`,
+      "Content-Type": "application/json",
+    },
+  });
+  return await req.json();
+};
+
 const getMalaysiaTestsData = async () => {
-  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/tests_malaysia.csv`;
-  const data = (await Papa.parsePromise(url)).data;
+  const repo = "MoH-Malaysia/covid19-public";
+  const file = "epidemic/tests_malaysia.csv";
+  const content = await getRepoContent(repo, file);
+  const commitRef = db.ref("commit/testing/malaysia");
+  const snapshot = await commitRef.once("value");
+  if (content.sha === snapshot.val()) return false;
+  const data = (await Papa.parsePromise(content.content)).data;
   const result = {};
   data.forEach((e) => {
     result[e.date] = {
@@ -44,12 +56,19 @@ const getMalaysiaTestsData = async () => {
   });
   const ref = db.ref("data/testing/malaysia");
   await ref.set(result);
-  return result;
+  await getTestingSummary();
+  await commitRef.set(content.sha);
+  return true;
 };
 
 const getMalaysiaCasesData = async () => {
-  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/cases_malaysia.csv`;
-  const data = (await Papa.parsePromise(url)).data;
+  const repo = "MoH-Malaysia/covid19-public";
+  const file = "epidemic/cases_malaysia.csv";
+  const content = await getRepoContent(repo, file);
+  const commitRef = db.ref("commit/cases/malaysia");
+  const snapshot = await commitRef.once("value");
+  if (content.sha === snapshot.val()) return false;
+  const data = (await Papa.parsePromise(content.content)).data;
   const result = {};
   data.forEach((e) => {
     result[e.date] = {
@@ -58,12 +77,19 @@ const getMalaysiaCasesData = async () => {
   });
   const ref = db.ref("data/cases/malaysia");
   await ref.set(result);
-  return result;
+  await getCasesSummary();
+  await commitRef.set(content.sha);
+  return true;
 };
 
 const getStatesCasesData = async () => {
-  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv`;
-  const data = (await Papa.parsePromise(url)).data;
+  const repo = "MoH-Malaysia/covid19-public";
+  const file = "epidemic/cases_state.csv";
+  const content = await getRepoContent(repo, file);
+  const commitRef = db.ref("commit/cases/states");
+  const snapshot = await commitRef.once("value");
+  if (content.sha === snapshot.val()) return false;
+  const data = (await Papa.parsePromise(content.content)).data;
   const result = {};
   data.forEach((e) => {
     const state = e.state.replace(/\s/g, "_").replace(/\./g, "").toLowerCase();
@@ -76,12 +102,18 @@ const getStatesCasesData = async () => {
   });
   const ref = db.ref("data/cases/states");
   await ref.set(result);
-  return result;
+  await commitRef.set(content.sha);
+  return true;
 };
 
 const getMalaysiaDeathsData = async () => {
-  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/deaths_malaysia.csv`;
-  const data = (await Papa.parsePromise(url)).data;
+  const repo = "MoH-Malaysia/covid19-public";
+  const file = "epidemic/deaths_malaysia.csv";
+  const content = await getRepoContent(repo, file);
+  const commitRef = db.ref("commit/deaths/malaysia");
+  const snapshot = await commitRef.once("value");
+  if (content.sha === snapshot.val()) return false;
+  const data = (await Papa.parsePromise(content.content)).data;
   const result = {};
   data.forEach((e) => {
     result[e.date] = {
@@ -90,12 +122,19 @@ const getMalaysiaDeathsData = async () => {
   });
   const ref = db.ref("data/deaths/malaysia");
   await ref.set(result);
-  return result;
+  await getDeathsSummary();
+  await commitRef.set(content.sha);
+  return true;
 };
 
 const getStatesDeathsData = async () => {
-  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/deaths_state.csv`;
-  const data = (await Papa.parsePromise(url)).data;
+  const repo = "MoH-Malaysia/covid19-public";
+  const file = "epidemic/deaths_state.csv";
+  const content = await getRepoContent(repo, file);
+  const commitRef = db.ref("commit/deaths/states");
+  const snapshot = await commitRef.once("value");
+  if (content.sha === snapshot.val()) return false;
+  const data = (await Papa.parsePromise(content.content)).data;
   const result = {};
   data.forEach((e) => {
     const state = e.state.replace(/\s/g, "_").replace(/\./g, "").toLowerCase();
@@ -108,12 +147,18 @@ const getStatesDeathsData = async () => {
   });
   const ref = db.ref("data/deaths/states");
   await ref.set(result);
-  return result;
+  await commitRef.set(content.sha);
+  return true;
 };
 
 const getVaccinationsData = async () => {
-  const url = `${githubBaseUrl}/CITF-Malaysia/citf-public/main/vaccination/vax_state.csv`;
-  const data = (await Papa.parsePromise(url)).data;
+  const repo = "CITF-Malaysia/citf-public";
+  const file = "vaccination/vax_state.csv";
+  const content = await getRepoContent(repo, file);
+  const commitRef = db.ref("commit/vaccinations/states");
+  const snapshot = await commitRef.once("value");
+  if (content.sha === snapshot.val()) return false;
+  const data = (await Papa.parsePromise(content.content)).data;
   const result = {
     malaysia: {},
     states: {},
@@ -147,12 +192,19 @@ const getVaccinationsData = async () => {
   });
   const ref = db.ref("data/vaccinations");
   await ref.set(result);
-  return result;
+  await getVaccinationsSummary();
+  await commitRef.set(content.sha);
+  return true;
 };
 
 const getHospitalData = async () => {
-  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/hospital.csv`;
-  const data = (await Papa.parsePromise(url)).data;
+  const repo = "MoH-Malaysia/covid19-public";
+  const file = "epidemic/hospital.csv";
+  const content = await getRepoContent(repo, file);
+  const commitRef = db.ref("commit/healthcare/hospital");
+  const snapshot = await commitRef.once("value");
+  if (content.sha === snapshot.val()) return false;
+  const data = (await Papa.parsePromise(content.content)).data;
   const result = {
     malaysia: {},
     states: {},
@@ -207,12 +259,19 @@ const getHospitalData = async () => {
   });
   const ref = db.ref("data/healthcare/hospital");
   await ref.set(result);
-  return result;
+  await getHospitalSummary();
+  await commitRef.set(content.sha);
+  return true;
 };
 
 const getICUData = async () => {
-  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/icu.csv`;
-  const data = (await Papa.parsePromise(url)).data;
+  const repo = "MoH-Malaysia/covid19-public";
+  const file = "epidemic/icu.csv";
+  const content = await getRepoContent(repo, file);
+  const commitRef = db.ref("commit/healthcare/icu");
+  const snapshot = await commitRef.once("value");
+  if (content.sha === snapshot.val()) return false;
+  const data = (await Papa.parsePromise(content.content)).data;
   const result = {
     malaysia: {},
     states: {},
@@ -270,12 +329,19 @@ const getICUData = async () => {
   });
   const ref = db.ref("data/healthcare/icu");
   await ref.set(result);
-  return result;
+  await getICUSummary();
+  await commitRef.set(content.sha);
+  return true;
 };
 
 const getPKRCData = async () => {
-  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/pkrc.csv`;
-  const data = (await Papa.parsePromise(url)).data;
+  const repo = "MoH-Malaysia/covid19-public";
+  const file = "epidemic/pkrc.csv";
+  const content = await getRepoContent(repo, file);
+  const commitRef = db.ref("commit/healthcare/pkrc");
+  const snapshot = await commitRef.once("value");
+  if (content.sha === snapshot.val()) return false;
+  const data = (await Papa.parsePromise(content.content)).data;
   const result = {
     malaysia: {},
     states: {},
@@ -327,46 +393,10 @@ const getPKRCData = async () => {
   });
   const ref = db.ref("data/healthcare/pkrc");
   await ref.set(result);
-  return result;
+  await getPKRCSummary();
+  await commitRef.set(content.sha);
+  return true;
 };
-
-exports.syncGithub = functions.https.onRequest(async (req, res) => {
-  try {
-    const promises = await Promise.all([
-      getMalaysiaTestsData(), // 0
-      getMalaysiaCasesData(), // 1
-      getStatesCasesData(), // 2
-      getMalaysiaDeathsData(), // 3
-      getStatesDeathsData(), // 4
-      getVaccinationsData(), // 5
-      getHospitalData(), // 6
-      getICUData(), // 7
-      getPKRCData(), // 8
-    ]);
-    res.send({
-      testing: {
-        malaysia: promises[0],
-      },
-      cases: {
-        malaysia: promises[1],
-        states: promises[2],
-      },
-      deaths: {
-        malaysia: promises[3],
-        states: promises[4],
-      },
-      vaccinations: promises[5],
-      healthcare: {
-        hospital: promises[6],
-        icu: promises[7],
-        pkrc: promises[8],
-      },
-    });
-  } catch (e) {
-    console.log("error", e);
-    res.send(e);
-  }
-});
 
 const uploadFile = async (file, fileName) => {
   const bucket = storage.bucket();
@@ -504,7 +534,7 @@ const getTestingSummary = async () => {
   summary.imageUrl = await uploadFile(chart, `summary/testing/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/testing");
   await summaryRef.set(summary);
-  return summary;
+  return true;
 };
 
 const getCasesSummary = async () => {
@@ -520,7 +550,7 @@ const getCasesSummary = async () => {
   summary.imageUrl = await uploadFile(chart, `summary/cases/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/cases");
   await summaryRef.set(summary);
-  return summary;
+  return true;
 };
 
 const getDeathsSummary = async () => {
@@ -536,7 +566,7 @@ const getDeathsSummary = async () => {
   summary.imageUrl = await uploadFile(chart, `summary/deaths/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/deaths");
   await summaryRef.set(summary);
-  return summary;
+  return true;
 };
 
 const getVaccinationsSummary = async () => {
@@ -555,7 +585,7 @@ const getVaccinationsSummary = async () => {
   summary.imageUrl = await uploadFile(chart, `summary/vaccinations/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/vaccinations");
   await summaryRef.set(summary);
-  return summary;
+  return true;
 };
 
 const getHospitalSummary = async () => {
@@ -571,7 +601,7 @@ const getHospitalSummary = async () => {
   summary.imageUrl = await uploadFile(chart, `summary/healthcare/hospital/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/healthcare/hospital");
   await summaryRef.set(summary);
-  return summary;
+  return true;
 };
 
 const getICUSummary = async () => {
@@ -587,7 +617,7 @@ const getICUSummary = async () => {
   summary.imageUrl = await uploadFile(chart, `summary/healthcare/icu/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/healthcare/icu");
   await summaryRef.set(summary);
-  return summary;
+  return true;
 };
 
 const getPKRCSummary = async () => {
@@ -603,29 +633,47 @@ const getPKRCSummary = async () => {
   summary.imageUrl = await uploadFile(chart, `summary/healthcare/pkrc/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/healthcare/pkrc");
   await summaryRef.set(summary);
-  return summary;
+  return true;
 };
 
-exports.generateSummaryReport = functions.https.onRequest(async (req, res) => {
-  const promises = await Promise.all([
-    getTestingSummary(),
-    getCasesSummary(),
-    getDeathsSummary(),
-    getVaccinationsSummary(),
-    getHospitalSummary(),
-    getICUSummary(),
-    getPKRCSummary(),
-  ]);
-  const result = {
-    testing: promises[0],
-    cases: promises[1],
-    deaths: promises[2],
-    vaccinations: promises[3],
-    healthcare: {
-      hospital: promises[4],
-      icu: promises[5],
-      pkrc: promises[6],
-    },
-  };
-  res.send(result);
+exports.syncGithub = functions.https.onRequest(async (req, res) => {
+  try {
+    const promises = await Promise.all([
+      getMalaysiaTestsData(), // 0
+      getMalaysiaCasesData(), // 1
+      getStatesCasesData(), // 2
+      getMalaysiaDeathsData(), // 3
+      getStatesDeathsData(), // 4
+      getVaccinationsData(), // 5
+      getHospitalData(), // 6
+      getICUData(), // 7
+      getPKRCData(), // 8
+    ]);
+    if (promises.filter((e) => e).length > 0) {
+      const lastUpdatedRef = db.ref("last_updated");
+      await lastUpdatedRef.set(Date.now());
+    }
+    res.send({
+      testing: {
+        malaysia: promises[0],
+      },
+      cases: {
+        malaysia: promises[1],
+        states: promises[2],
+      },
+      deaths: {
+        malaysia: promises[3],
+        states: promises[4],
+      },
+      vaccinations: promises[5],
+      healthcare: {
+        hospital: promises[6],
+        icu: promises[7],
+        pkrc: promises[8],
+      },
+    });
+  } catch (e) {
+    console.log("error", e);
+    res.send(e);
+  }
 });
