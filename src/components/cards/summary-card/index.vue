@@ -1,13 +1,13 @@
 <template>
   <div class="flex flex-col bg-gray-100">
     <div class="flex-1 p-4">
-      <div class="text-gray-700">{{ category }}</div>
-      <div class="text-xl font-semibold mb-2">{{ title }}</div>
+      <div class="text-gray-700">{{ data.category }}</div>
+      <div class="text-xl font-semibold mb-2">{{ data.title }}</div>
       <div class="text-gray-700 text-sm mb-4">
-        Latest data provided on {{ formatDate(date) }}
+        Latest data provided on {{ data.date }}
       </div>
-      <div class="mb-2">
-        <div class="text-sm">Daily — 1st dose</div>
+      <div class="mb-2" v-for="(item, key) in data.values" :key="key">
+        <div class="text-sm">{{ item.title }}</div>
         <span
           class="
             has-tooltip
@@ -15,53 +15,28 @@
             border-dashed border-b border-black
             cursor-help
           "
-          >99,999</span
+          >{{ item.value.toLocaleString() }}</span
         >
         <div class="tooltip">
-          Number of people vaccinated (first dose) reported on {{ date }}
-        </div>
-      </div>
-      <div class="mb-2">
-        <div class="text-sm">Daily — 2nd dose</div>
-        <span
-          class="
-            has-tooltip
-            text-2xl
-            border-dashed border-b border-black
-            cursor-help
-          "
-          >99,999</span
-        >
-        <div class="tooltip">
-          Number of people vaccinated (second dose) reported on {{ date }}
+          {{ item.tooltip }}
         </div>
       </div>
     </div>
-    <div class="border-t border-gray-300 px-4 py-3">
+    <div class="p-4">
+      <img :src="data.imageUrl" />
+    </div>
+    <!-- <div class="border-t border-gray-300 px-4 py-3">
       <router-link to="/" class="font-medium"
-        >All <span class="lowercase">{{ category }}</span> data</router-link
-      >
-    </div>
+        >All <span class="lowercase">{{ data.category }}</span> data
+      </router-link>
+    </div> -->
   </div>
 </template>
 
 <script>
 export default {
   props: {
-    category: String,
-    title: String,
-    date: String,
-    link: String,
-  },
-  methods: {
-    formatDate(value) {
-      if (!value) return value;
-      return new Date(value).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-    },
+    data: Object,
   },
 };
 </script>

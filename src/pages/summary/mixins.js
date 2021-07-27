@@ -17,6 +17,7 @@ export default {
       });
     },
     sevenDaysAgo(value) {
+      if (!value) return value;
       const d = new Date(value);
       const newDate = d.setDate(d.getDate() - 7);
       return this.formatDate(newDate);
