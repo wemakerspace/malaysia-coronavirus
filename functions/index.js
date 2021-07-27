@@ -47,62 +47,66 @@ const getMalaysiaTestsData = async () => {
   return result;
 };
 
-const getCasesData = async () => {
-  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv`;
+const getMalaysiaCasesData = async () => {
+  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/cases_malaysia.csv`;
   const data = (await Papa.parsePromise(url)).data;
-  const result = {
-    malaysia: {},
-    states: {},
-  };
+  const result = {};
   data.forEach((e) => {
-    const state = e.state.replace(/\s/g, "_").replace(/\./g, "").toLowerCase();
-    if (!result.malaysia[e.date]) {
-      result.malaysia[e.date] = {
-        cases_new: 0,
-      };
-    }
-    if (!result.states[state]) {
-      result.states[state] = {};
-    }
-    const mys = result.malaysia[e.date];
-    result.states[state][e.date] = {
+    result[e.date] = {
       cases_new: parseInt(e["cases_new"]),
     };
-    result.malaysia[e.date] = {
-      cases_new: mys.cases_new + parseInt(e["cases_new"]),
-    };
   });
-  const ref = db.ref("data/cases");
+  const ref = db.ref("data/cases/malaysia");
   await ref.set(result);
   return result;
 };
 
-const getDeathsData = async () => {
-  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/deaths_state.csv`;
+const getStatesCasesData = async () => {
+  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/cases_state.csv`;
   const data = (await Papa.parsePromise(url)).data;
-  const result = {
-    malaysia: {},
-    states: {},
-  };
+  const result = {};
   data.forEach((e) => {
     const state = e.state.replace(/\s/g, "_").replace(/\./g, "").toLowerCase();
-    if (!result.malaysia[e.date]) {
-      result.malaysia[e.date] = {
-        deaths_new: 0,
-      };
+    if (!result[state]) {
+      result[state] = {};
     }
-    if (!result.states[state]) {
-      result.states[state] = {};
-    }
-    const mys = result.malaysia[e.date];
-    result.states[state][e.date] = {
-      deaths_new: parseInt(e["deaths_new"]),
-    };
-    result.malaysia[e.date] = {
-      deaths_new: mys.deaths_new + parseInt(e["deaths_new"]),
+    result[state][e.date] = {
+      cases_new: parseInt(e["cases_new"]),
     };
   });
-  const ref = db.ref("data/deaths");
+  const ref = db.ref("data/cases/states");
+  await ref.set(result);
+  return result;
+};
+
+const getMalaysiaDeathsData = async () => {
+  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/deaths_malaysia.csv`;
+  const data = (await Papa.parsePromise(url)).data;
+  const result = {};
+  data.forEach((e) => {
+    result[e.date] = {
+      deaths_new: parseInt(e["deaths_new"]),
+    };
+  });
+  const ref = db.ref("data/deaths/malaysia");
+  await ref.set(result);
+  return result;
+};
+
+const getStatesDeathsData = async () => {
+  const url = `${githubBaseUrl}/MoH-Malaysia/covid19-public/main/epidemic/deaths_state.csv`;
+  const data = (await Papa.parsePromise(url)).data;
+  const result = {};
+  data.forEach((e) => {
+    const state = e.state.replace(/\s/g, "_").replace(/\./g, "").toLowerCase();
+    if (!result[state]) {
+      result[state] = {};
+    }
+    result[state][e.date] = {
+      deaths_new: parseInt(e["deaths_new"]),
+    };
+  });
+  const ref = db.ref("data/deaths/states");
   await ref.set(result);
   return result;
 };
@@ -329,25 +333,33 @@ const getPKRCData = async () => {
 exports.syncGithub = functions.https.onRequest(async (req, res) => {
   try {
     const promises = await Promise.all([
-      getMalaysiaTestsData(),
-      getCasesData(),
-      getDeathsData(),
-      getVaccinationsData(),
-      getHospitalData(),
-      getICUData(),
-      getPKRCData(),
+      getMalaysiaTestsData(), // 0
+      getMalaysiaCasesData(), // 1
+      getStatesCasesData(), // 2
+      getMalaysiaDeathsData(), // 3
+      getStatesDeathsData(), // 4
+      getVaccinationsData(), // 5
+      getHospitalData(), // 6
+      getICUData(), // 7
+      getPKRCData(), // 8
     ]);
     res.send({
       testing: {
         malaysia: promises[0],
       },
-      cases: promises[1],
-      deaths: promises[2],
-      vaccinations: promises[3],
+      cases: {
+        malaysia: promises[1],
+        states: promises[2],
+      },
+      deaths: {
+        malaysia: promises[3],
+        states: promises[4],
+      },
+      vaccinations: promises[5],
       healthcare: {
-        hospital: promises[4],
-        icu: promises[5],
-        pkrc: promises[6],
+        hospital: promises[6],
+        icu: promises[7],
+        pkrc: promises[8],
       },
     });
   } catch (e) {
