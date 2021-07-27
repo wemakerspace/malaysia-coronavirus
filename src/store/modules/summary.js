@@ -1,5 +1,8 @@
 import axios from "axios";
 
+const baseUrl =
+  "https://malaysia-coronavirus-default-rtdb.asia-southeast1.firebasedatabase.app";
+
 export default {
   namespaced: true,
   state: () => ({
@@ -74,20 +77,30 @@ export default {
         },
       },
     },
+    last_updated: "",
   }),
   actions: {
     async fetchSummary({ commit, state }) {
       if (state.summary.testing.latest_value > 0) return;
-      const baseUrl =
-        "https://malaysia-coronavirus-default-rtdb.asia-southeast1.firebasedatabase.app";
       const url = `${baseUrl}/summary.json`;
       const data = (await axios.get(url)).data;
       return commit("setSummary", data);
+    },
+    async fetchLastUpdated({ commit, state }) {
+      commit("setLastUpdated", localStorage.getItem("last_updated") || "");
+      if (state.last_updated !== "") return;
+      const url = `${baseUrl}/last_updated.json`;
+      const data = (await axios.get(url)).data;
+      localStorage.setItem("last_updated", data);
+      return commit("setLastUpdated", data);
     },
   },
   mutations: {
     setSummary(state, summary) {
       state.summary = summary;
+    },
+    setLastUpdated(state, lastUpdated) {
+      state.last_updated = lastUpdated;
     },
   },
 };

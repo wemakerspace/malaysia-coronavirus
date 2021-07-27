@@ -5,3 +5,4 @@ dist-ssr
 *.local
 firebase-debug.log
 serviceaccount.json
+.runtimeconfig.json
