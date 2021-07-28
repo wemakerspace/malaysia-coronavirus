@@ -8,7 +8,7 @@
       {{ formatDate(data.latest_date) }}.
     </p>
     <p>
-      Between {{ sevenDaysAgo(data.latest_date) }} and
+      Between {{ daysAgo(data.latest_date, 7) }} and
       {{ formatDate(data.latest_date) }},
       <b>{{ data.current_seven_days_total.toLocaleString() }}</b> people had a
       confirmed positive test result. This shows {{ compareText(data.change) }}
@@ -19,11 +19,3 @@
     </p>
   </div>
 </template>
-
-<script>
-import Mixins from "./mixins.js";
-
-export default {
-  mixins: [Mixins],
-};
-</script>

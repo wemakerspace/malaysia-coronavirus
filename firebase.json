@@ -22,6 +22,12 @@
         "key": "Cache-Control",
         "value": "max-age=7200"
       } ]
+    }, {
+      "source": "**/*.@(css|js)",
+      "headers": [ {
+        "key": "Cache-Control",
+        "value": "max-age=7200"
+      } ]
     }],
     "cleanUrls": true,
     "trailingSlash": false

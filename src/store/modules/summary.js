@@ -66,6 +66,15 @@ export default {
           oldest_date: "",
           previous_seven_days_total: 0,
         },
+        icu_vent: {
+          change: 0,
+          current_seven_days_total: 0,
+          imageUrl: "",
+          latest_date: "",
+          latest_value: 0,
+          oldest_date: "",
+          previous_seven_days_total: 0,
+        },
         pkrc: {
           change: 0,
           current_seven_days_total: 0,
@@ -87,11 +96,9 @@ export default {
       return commit("setSummary", data);
     },
     async fetchLastUpdated({ commit, state }) {
-      commit("setLastUpdated", localStorage.getItem("last_updated") || "");
       if (state.last_updated !== "") return;
       const url = `${baseUrl}/last_updated.json`;
       const data = (await axios.get(url)).data;
-      localStorage.setItem("last_updated", data);
       return commit("setLastUpdated", data);
     },
   },

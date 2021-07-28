@@ -15,7 +15,7 @@
       </h3>
     </div>
 
-    <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <vaccination-card class="col-span-full" :data="summary.vaccinations" />
       <summary-card v-for="(item, key) in cards" :key="key" :data="item" />
     </div>
@@ -39,9 +39,7 @@ export default {
         {
           category: "Cases",
           title: "People tested positive",
-          date: this.formatDate(this.summary.cases.latest_date),
           link: "cases",
-          imageUrl: this.summary.cases.imageUrl,
           values: [
             {
               title: "Daily",
@@ -53,18 +51,18 @@ export default {
             {
               title: "Last 7 days",
               value: this.summary.cases.current_seven_days_total,
-              tooltip: `Total number of people tested positive reported in the last 7 days (${this.sevenDaysAgo(
-                this.summary.cases.latest_date
+              tooltip: `Total number of people tested positive reported in the last 7 days (${this.daysAgo(
+                this.summary.cases.latest_date,
+                7
               )} – ${this.formatDate(this.summary.cases.latest_date)})`,
             },
           ],
+          ...this.summary.cases,
         },
         {
           category: "Deaths",
           title: "Deaths",
-          date: this.formatDate(this.summary.deaths.latest_date),
           link: "deaths",
-          imageUrl: this.summary.deaths.imageUrl,
           values: [
             {
               title: "Daily",
@@ -76,19 +74,19 @@ export default {
             {
               title: "Last 7 days",
               value: this.summary.deaths.current_seven_days_total,
-              tooltip: `Total number of deaths reported in the last 7 days (${this.sevenDaysAgo(
-                this.summary.deaths.latest_date
+              tooltip: `Total number of deaths reported in the last 7 days (${this.daysAgo(
+                this.summary.deaths.latest_date,
+                7
               )} – ${this.formatDate(this.summary.deaths.latest_date)})`,
             },
           ],
+          ...this.summary.deaths,
         },
         {
           category: "Healthcare",
           title:
             "Patients admitted in COVID-19 Quarantine and Treatment Centre",
-          date: this.formatDate(this.summary.healthcare.pkrc.latest_date),
           link: "healthcare",
-          imageUrl: this.summary.healthcare.pkrc.imageUrl,
           values: [
             {
               title: "Daily",
@@ -100,20 +98,20 @@ export default {
             {
               title: "Last 7 days",
               value: this.summary.healthcare.pkrc.current_seven_days_total,
-              tooltip: `Total number of patients admitted in COVID-19 Quarantine and Treatment Centre (PKRC) reported in the last 7 days (${this.sevenDaysAgo(
-                this.summary.healthcare.pkrc.latest_date
+              tooltip: `Total number of patients admitted in COVID-19 Quarantine and Treatment Centre (PKRC) reported in the last 7 days (${this.daysAgo(
+                this.summary.healthcare.pkrc.latest_date,
+                7
               )} – ${this.formatDate(
                 this.summary.healthcare.pkrc.latest_date
               )})`,
             },
           ],
+          ...this.summary.healthcare.pkrc,
         },
         {
           category: "Healthcare",
           title: "Patients admitted in hospital",
-          date: this.formatDate(this.summary.healthcare.hospital.latest_date),
           link: "healthcare",
-          imageUrl: this.summary.healthcare.hospital.imageUrl,
           values: [
             {
               title: "Daily",
@@ -125,20 +123,20 @@ export default {
             {
               title: "Last 7 days",
               value: this.summary.healthcare.hospital.current_seven_days_total,
-              tooltip: `Total number of patients admitted in hospital reported in the last 7 days (${this.sevenDaysAgo(
-                this.summary.healthcare.hospital.latest_date
+              tooltip: `Total number of patients admitted in hospital reported in the last 7 days (${this.daysAgo(
+                this.summary.healthcare.hospital.latest_date,
+                7
               )} – ${this.formatDate(
                 this.summary.healthcare.hospital.latest_date
               )})`,
             },
           ],
+          ...this.summary.healthcare.hospital,
         },
         {
           category: "Healthcare",
           title: "Patients admitted in ICU",
-          date: this.formatDate(this.summary.healthcare.icu.latest_date),
           link: "healthcare",
-          imageUrl: this.summary.healthcare.icu.imageUrl,
           values: [
             {
               title: "Daily",
@@ -150,20 +148,45 @@ export default {
             {
               title: "Last 7 days",
               value: this.summary.healthcare.icu.current_seven_days_total,
-              tooltip: `Total number of patients admitted in ICU reported in the last 7 days (${this.sevenDaysAgo(
-                this.summary.healthcare.icu.latest_date
+              tooltip: `Total number of patients admitted in ICU reported in the last 7 days (${this.daysAgo(
+                this.summary.healthcare.icu.latest_date,
+                7
               )} – ${this.formatDate(
                 this.summary.healthcare.icu.latest_date
               )})`,
             },
           ],
+          ...this.summary.healthcare.icu,
+        },
+        {
+          category: "Healthcare",
+          title: "Patients admitted in ICU on ventilators",
+          link: "healthcare",
+          values: [
+            {
+              title: "Daily",
+              value: this.summary.healthcare.icu_vent.latest_value,
+              tooltip: `Daily number of patients admitted in ICU and receiving mechanical ventilator reported on ${this.formatDate(
+                this.summary.healthcare.icu_vent.latest_date
+              )}`,
+            },
+            {
+              title: "Last 7 days",
+              value: this.summary.healthcare.icu_vent.current_seven_days_total,
+              tooltip: `Total number of patients admitted in ICU and receiving mechanical ventilator reported in the last 7 days (${this.daysAgo(
+                this.summary.healthcare.icu_vent.latest_date,
+                7
+              )} – ${this.formatDate(
+                this.summary.healthcare.icu_vent.latest_date
+              )})`,
+            },
+          ],
+          ...this.summary.healthcare.icu_vent,
         },
         {
           category: "Testing",
           title: "Virus tests conducted",
-          date: this.formatDate(this.summary.testing.latest_date),
           link: "testing",
-          imageUrl: this.summary.testing.imageUrl,
           values: [
             {
               title: "Daily",
@@ -175,18 +198,18 @@ export default {
             {
               title: "Last 7 days",
               value: this.summary.testing.current_seven_days_total,
-              tooltip: `Total number of virus tests conducted reported in the last 7 days (${this.sevenDaysAgo(
-                this.summary.testing.latest_date
+              tooltip: `Total number of virus tests conducted reported in the last 7 days (${this.daysAgo(
+                this.summary.testing.latest_date,
+                7
               )} – ${this.formatDate(this.summary.testing.latest_date)})`,
             },
           ],
+          ...this.summary.testing,
         },
         {
           category: "Vaccination",
           title: "Vaccine administered",
-          date: this.formatDate(this.summary.vaccinations.latest_date),
           link: "vaccinations",
-          imageUrl: this.summary.vaccinations.imageUrl,
           values: [
             {
               title: "Daily",
@@ -198,27 +221,15 @@ export default {
             {
               title: "Last 7 days",
               value: this.summary.vaccinations.current_seven_days_total,
-              tooltip: `Total number of vaccine administered reported in the last 7 days (${this.sevenDaysAgo(
-                this.summary.vaccinations.latest_date
+              tooltip: `Total number of vaccine administered reported in the last 7 days (${this.daysAgo(
+                this.summary.vaccinations.latest_date,
+                7
               )} – ${this.formatDate(this.summary.vaccinations.latest_date)})`,
             },
           ],
+          ...this.summary.vaccinations,
         },
       ];
-    },
-  },
-  methods: {
-    formatDate(value) {
-      return new Date(value).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-    },
-    sevenDaysAgo(value) {
-      const d = new Date(value);
-      const newDate = d.setDate(d.getDate() - 7);
-      return this.formatDate(newDate);
     },
   },
   async mounted() {

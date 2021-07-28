@@ -16,10 +16,10 @@ export default {
         year: "numeric",
       });
     },
-    sevenDaysAgo(value) {
+    daysAgo(value, days = 7) {
       if (!value) return value;
       const d = new Date(value);
-      const newDate = d.setDate(d.getDate() - 7);
+      const newDate = d.setDate(d.getDate() - days);
       return this.formatDate(newDate);
     },
   },

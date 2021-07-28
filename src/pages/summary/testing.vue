@@ -15,17 +15,9 @@
       compared to the previous 7 days.
     </p>
     <p>
-      Between {{ sevenDaysAgo(data.latest_date) }} and
+      Between {{ daysAgo(data.latest_date, 7) }} and
       {{ formatDate(data.latest_date) }}, there have been
       <b>{{ data.current_seven_days_total.toLocaleString() }}</b> tests.
     </p>
   </div>
 </template>
-
-<script>
-import Mixins from "./mixins.js";
-
-export default {
-  mixins: [Mixins],
-};
-</script>

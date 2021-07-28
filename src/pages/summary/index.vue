@@ -18,9 +18,9 @@
       <li>
         <a href="#vaccinations">Vaccinations</a>
       </li>
-      <!-- <li>
+      <li>
         <a href="#healthcare">Healthcare</a>
-      </li> -->
+      </li>
       <li>
         <a href="#deaths">Deaths</a>
       </li>
@@ -29,7 +29,7 @@
     <testing-element :data="summary.testing" />
     <cases-element :data="summary.cases" />
     <vaccinations-element :data="summary.vaccinations" />
-    <!-- <healthcare-element /> -->
+    <healthcare-element :data="summary.healthcare" />
     <deaths-element :data="summary.deaths" />
   </div>
 </template>
@@ -38,7 +38,7 @@
 import Testing from "./testing.vue";
 import Cases from "./cases.vue";
 import Vaccinations from "./vaccinations.vue";
-// import Healthcare from "./healthcare.vue";
+import Healthcare from "./healthcare.vue";
 import Deaths from "./deaths.vue";
 
 export default {
@@ -46,7 +46,7 @@ export default {
     "testing-element": Testing,
     "cases-element": Cases,
     "vaccinations-element": Vaccinations,
-    // "healthcare-element": Healthcare,
+    "healthcare-element": Healthcare,
     "deaths-element": Deaths,
   },
   computed: {
