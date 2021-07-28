@@ -3,15 +3,15 @@ import { getAnalytics } from "firebase/analytics";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAubIu1CY5qT8Vb_T9JGpFo7T1vcXTlJPM",
-  databaseURL:
-    "https://malaysia-coronavirus-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "malaysia-coronavirus",
-  appId: "1:419005448887:web:9a77c5d9a46ff1b70a4332",
-  measurementId: "G-KKMMVH5QYW",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
-export const analytics = getAnalytics();
+export const firebaseApp = app;
 export const database = getDatabase();
+export const analytics = getAnalytics();
