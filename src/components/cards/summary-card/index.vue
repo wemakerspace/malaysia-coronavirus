@@ -41,6 +41,7 @@
     <div class="p-4 w-full">
       <div class="aspect-w-2 aspect-h-1">
         <img
+          v-if="data.imageUrl"
           :src="data.imageUrl"
           loading="lazy"
           :alt="`Chart of ${data.title} in the last 180 days`"
