@@ -424,37 +424,39 @@ const uploadFile = async (file, fileName) => {
   return `${baseUrl}${bucket.name}/o/${encodeURIComponent(destination)}?alt=media`;
 };
 
-const generateSummaryChart = async (data, summary) => {
+const generateSummaryChart = async (data, summary = {}) => {
   const width = 700;
   const height = 350;
   const chartJSNodeCanvas = new CanvasRenderService(
       width,
       height,
   );
-  const labels = data.slice(7, -7).map((e) => {
-    const d = new Date(e[0]);
-    if (d.getDate() !== 1) return "";
-    return d.toLocaleString("en", {month: "short"});
-  });
-  const first = [];
-  const second = [];
-  for (let i = 7; i < data.length - 7; i++) {
+  const labels = [];
+  const first = new Array(180).fill(null);
+  const second = new Array(180).fill(null);
+  for (let i = 7; i < data.length; i++) {
     let total = 0;
-    for (let j = i - 7; j < i + 7; j++) {
-      total += data[j][1];
+    for (let j = 0; j < 7; j++) {
+      total += data[i - j][1];
     }
-    const average = total / (7 * 2);
-    const k = data.length - i - 7;
-    if (k >= 7) {
-      first[i - 7] = average;
-      second[i - 7] = k === 7 ? average : null;
-    } else {
-      first[i - 7] = null;
-      second[i - 7] = average;
-    }
+    const d = new Date(data[i][0]);
+    const label = (d.getDate() !== 1) ?
+      "" : d.toLocaleString("en", {month: "short"});
+    labels.push(label);
+    if (data.length - i >= 14) first[i - 7] = total / 7;
+    if (data.length - i <= 14) second[i - 7] = total / 7;
+  }
+  let secondBorderColor = "#383f43";
+  let secondBackgroundColor = "#ebe9e7";
+  if (summary.change > 0) {
+    secondBorderColor = "#942514";
+    secondBackgroundColor = "#f6d7d2";
+  }
+  if (summary.change <= 0) {
+    secondBorderColor = "#005a30";
+    secondBackgroundColor = "#cce2d8";
   }
   const config = {
-    type: "svg",
     data: {
       labels,
       datasets: [{
@@ -462,17 +464,16 @@ const generateSummaryChart = async (data, summary) => {
         data: first,
         pointRadius: 0,
         borderWidth: 2,
-        borderColor: "black",
+        borderColor: "#383f43",
         backgroundColor: "transparent",
-      }, {
+      },
+      {
         type: "line",
         data: second,
         pointRadius: 0,
         borderWidth: 2,
-        borderColor: "black",
-        backgroundColor: "transparent",
-        // borderColor: summary.change >= 0 ? "#94261c" : "#265b31",
-        // backgroundColor: summary.change >= 0 ? "#f6d7d2" : "#cce2d8",
+        borderColor: secondBorderColor,
+        backgroundColor: secondBackgroundColor,
       }],
     },
     options: {
@@ -485,13 +486,12 @@ const generateSummaryChart = async (data, summary) => {
             display: false,
           },
           ticks: {
-            stepSize: 7,
             min: 0,
             autoSkip: false,
             maxRotation: 0,
             minRotation: 0,
-            fontColor: "#424242",
-            fontSize: 22,
+            fontColor: "#6b7276",
+            fontSize: 20,
             fontStyle: 500,
           },
         }],
@@ -501,8 +501,7 @@ const generateSummaryChart = async (data, summary) => {
       },
     },
   };
-  const img = await chartJSNodeCanvas.renderToDataURL(config);
-  return img;
+  return await chartJSNodeCanvas.renderToDataURL(config);
 };
 
 const computeSummary = (data) => {
@@ -530,7 +529,7 @@ const getTestingSummary = async () => {
     data.push([e.key, value.pcr + value["rtk-ag"]]);
   });
   const summary = computeSummary(data);
-  const chart = await generateSummaryChart(data, summary);
+  const chart = await generateSummaryChart(data);
   summary.imageUrl = await uploadFile(chart, `summary/testing/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/testing");
   await summaryRef.set(summary);
@@ -581,7 +580,7 @@ const getVaccinationsSummary = async () => {
     ...computeSummary(data),
     ...data[data.length - 1][2],
   };
-  const chart = await generateSummaryChart(data, summary);
+  const chart = await generateSummaryChart(data);
   summary.imageUrl = await uploadFile(chart, `summary/vaccinations/${summary.latest_date}.png`);
   const summaryRef = db.ref("summary/vaccinations");
   await summaryRef.set(summary);
@@ -607,16 +606,23 @@ const getHospitalSummary = async () => {
 const getICUSummary = async () => {
   const ref = db.ref("data/healthcare/icu/malaysia");
   const snapshot = await ref.limitToLast(180).once("value");
-  const data = [];
+  const icuData = [];
+  const icuVentData = [];
   snapshot.forEach((e) => {
     const value = e.val();
-    data.push([e.key, value.icu_covid + value.icu_pui]);
+    icuData.push([e.key, value.icu_covid + value.icu_pui]);
+    icuVentData.push([e.key, value.vent_covid + value.vent_pui]);
   });
-  const summary = computeSummary(data);
-  const chart = await generateSummaryChart(data, summary);
-  summary.imageUrl = await uploadFile(chart, `summary/healthcare/icu/${summary.latest_date}.png`);
-  const summaryRef = db.ref("summary/healthcare/icu");
-  await summaryRef.set(summary);
+  const icuSummary = computeSummary(icuData);
+  const icuChart = await generateSummaryChart(icuData, icuSummary);
+  icuSummary.imageUrl = await uploadFile(icuChart, `summary/healthcare/icu/${icuSummary.latest_date}.png`);
+  const icuSummaryRef = db.ref("summary/healthcare/icu");
+  await icuSummaryRef.set(icuSummary);
+  const icuVentSummary = computeSummary(icuVentData);
+  const icuVentChart = await generateSummaryChart(icuVentData, icuVentSummary);
+  icuVentSummary.imageUrl = await uploadFile(icuVentChart, `summary/healthcare/icu_vent/${icuVentSummary.latest_date}.png`);
+  const icuVentSummaryRef = db.ref("summary/healthcare/icu_vent");
+  await icuVentSummaryRef.set(icuVentSummary);
   return true;
 };
 
@@ -637,6 +643,9 @@ const getPKRCSummary = async () => {
 };
 
 exports.syncGithub = functions.https.onRequest(async (req, res) => {
+  const reqToken = functions.config().config.reqtoken;
+  if (req.headers.authorization !== `Bearer ${reqToken}`) return res.status(401).send();
+
   try {
     const promises = await Promise.all([
       getMalaysiaTestsData(), // 0
