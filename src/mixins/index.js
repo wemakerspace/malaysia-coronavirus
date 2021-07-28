@@ -10,16 +10,13 @@ export default {
     },
     formatDate(value) {
       if (!value) return value;
-      return new Date(value).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
+      const options = { dateStyle: "long" };
+      return new Intl.DateTimeFormat("en-GB", options).format(new Date(value));
     },
     daysAgo(value, days = 7) {
       if (!value) return value;
       const d = new Date(value);
-      const newDate = d.setDate(d.getDate() - days);
+      const newDate = d.setDate(d.getDate() - days + 1);
       return this.formatDate(newDate);
     },
   },

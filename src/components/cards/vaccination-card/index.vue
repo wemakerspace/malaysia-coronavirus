@@ -100,7 +100,6 @@ export default {
   },
   computed: {
     pop() {
-      // return 32657400;
       return 23409600;
     },
     first() {
@@ -111,11 +110,7 @@ export default {
     },
     date() {
       if (!this.data.latest_date) return "";
-      return new Date(this.data.latest_date).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
+      return this.formatDate(this.data.latest_date);
     },
     doses() {
       return [

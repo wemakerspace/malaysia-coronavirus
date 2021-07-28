@@ -81,8 +81,8 @@ export default {
       try {
         return `Change from previous 7 days (${this.daysAgo(
           this.data.latest_date,
-          13
-        )} – ${this.daysAgo(this.data.latest_date, 7)})`;
+          14
+        )} – ${this.daysAgo(this.data.latest_date, 8)})`;
       } catch (e) {
         return "";
       }
