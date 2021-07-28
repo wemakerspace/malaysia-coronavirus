@@ -1,7 +1,5 @@
-import axios from "axios";
-
-const baseUrl =
-  "https://malaysia-coronavirus-default-rtdb.asia-southeast1.firebasedatabase.app";
+import { ref, child, get } from "firebase/database";
+import { database } from "@/firebase/index.js";
 
 export default {
   namespaced: true,
@@ -90,16 +88,19 @@ export default {
   }),
   actions: {
     async fetchSummary({ commit, state }) {
-      if (state.summary.testing.latest_value > 0) return;
-      const url = `${baseUrl}/summary.json`;
-      const data = (await axios.get(url)).data;
-      return commit("setSummary", data);
+      try {
+        if (state.summary.testing.latest_value > 0) return;
+        const dbRef = ref(database);
+        const snapshot = await get(child(dbRef, "summary"));
+        return commit("setSummary", snapshot.val());
+      } catch (e) {}
     },
-    async fetchLastUpdated({ commit, state }) {
-      if (state.last_updated !== "") return;
-      const url = `${baseUrl}/last_updated.json`;
-      const data = (await axios.get(url)).data;
-      return commit("setLastUpdated", data);
+    async fetchLastUpdated({ commit }) {
+      try {
+        const dbRef = ref(database);
+        const snapshot = await get(child(dbRef, "last_updated"));
+        return commit("setLastUpdated", snapshot.val());
+      } catch (e) {}
     },
   },
   mutations: {

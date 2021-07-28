@@ -6,3 +6,4 @@ dist-ssr
 firebase-debug.log
 serviceaccount.json
 .runtimeconfig.json
+.env

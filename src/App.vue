@@ -1,5 +1,7 @@
 <template>
   <div>
+    <!-- <splash-element v-if="loading" @loaded="loading = false" />
+    <template v-else> -->
     <header-element />
     <main class="w-full flex px-4 py-2 lg:px-6 lg:py-4">
       <navbar-element class="hidden md:block" />
@@ -8,20 +10,26 @@
       </div>
     </main>
     <footer-element />
+    <!-- </template> -->
   </div>
 </template>
 
 <script>
+// import Splash from "@/components/splash/index.vue";
 import Header from "@/components/header/index.vue";
 import Footer from "@/components/footer/index.vue";
 import NavBar from "@/components/navbar/index.vue";
 
 export default {
   components: {
+    // "splash-element": Splash,
     "header-element": Header,
     "footer-element": Footer,
     "navbar-element": NavBar,
   },
+  // data: () => ({
+  //   loading: true,
+  // }),
 };
 </script>
 
