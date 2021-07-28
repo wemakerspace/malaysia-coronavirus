@@ -421,7 +421,7 @@ const uploadFile = async (file, fileName) => {
   await bucket.file(destination).makePublic();
 
   const baseUrl = "https://firebasestorage.googleapis.com/v0/b/";
-  return `${baseUrl}${bucket.name}/o/${encodeURIComponent(destination)}?alt=media`;
+  return `${baseUrl}${bucket.name}/o/${encodeURIComponent(destination)}?alt=media&t=${Date.now()}`;
 };
 
 const generateSummaryChart = async (data, summary = {}) => {
