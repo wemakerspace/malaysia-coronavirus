@@ -4,7 +4,7 @@
 Source code for the (unofficial) [Malaysia's Coronavirus Dashboard](https://malaysia-coronavirus.web.app). This project is not affiliated with Malaysia's government.
 
 
-![Screenshot of the Malaysia's Coronavirus Dashboard](https://i.imgur.com/GfUX8E6.png)
+![Screenshot of the Malaysia's Coronavirus Dashboard](https://i.imgur.com/WPmYzHM.png)
   
 
 ## Technologies
