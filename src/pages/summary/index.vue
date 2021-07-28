@@ -18,19 +18,19 @@
       <li>
         <a href="#vaccinations">Vaccinations</a>
       </li>
-      <!-- <li>
+      <li>
         <a href="#healthcare">Healthcare</a>
-      </li> -->
+      </li>
       <li>
         <a href="#deaths">Deaths</a>
       </li>
     </ul>
 
-    <testing-element :data="data.testing" />
-    <cases-element :data="data.cases" />
-    <vaccinations-element :data="data.vaccinations" />
-    <!-- <healthcare-element /> -->
-    <deaths-element :data="data.deaths" />
+    <testing-element :data="summary.testing" />
+    <cases-element :data="summary.cases" />
+    <vaccinations-element :data="summary.vaccinations" />
+    <healthcare-element :data="summary.healthcare" />
+    <deaths-element :data="summary.deaths" />
   </div>
 </template>
 
@@ -38,7 +38,7 @@
 import Testing from "./testing.vue";
 import Cases from "./cases.vue";
 import Vaccinations from "./vaccinations.vue";
-// import Healthcare from "./healthcare.vue";
+import Healthcare from "./healthcare.vue";
 import Deaths from "./deaths.vue";
 
 export default {
@@ -46,49 +46,16 @@ export default {
     "testing-element": Testing,
     "cases-element": Cases,
     "vaccinations-element": Vaccinations,
-    // "healthcare-element": Healthcare,
+    "healthcare-element": Healthcare,
     "deaths-element": Deaths,
   },
-  data: () => ({
-    data: {
-      cases: {
-        change: 0,
-        current_seven_days_total: 0,
-        latest_date: "",
-        latest_value: 0,
-        oldest_date: "",
-        previous_seven_days_total: 0,
-      },
-      deaths: {
-        change: 0,
-        current_seven_days_total: 0,
-        latest_date: "",
-        latest_value: 0,
-        oldest_date: "",
-        previous_seven_days_total: 0,
-      },
-      testing: {
-        change: 0,
-        current_seven_days_total: 0,
-        latest_date: "",
-        latest_value: 0,
-        oldest_date: "",
-        previous_seven_days_total: 0,
-      },
-      vaccinations: {
-        dose1_cumul: 0,
-        dose1_daily: 0,
-        dose2_cumul: 0,
-        dose2_daily: 0,
-        latest_date: "",
-      },
+  computed: {
+    summary() {
+      return this.$store.state.summary.summary;
     },
-  }),
+  },
   async mounted() {
-    const dbId = "malaysia-coronavirus-default-rtdb";
-    const dbUrl = `https://${dbId}.asia-southeast1.firebasedatabase.app`;
-    const req = await fetch(`${dbUrl}/summary.json`);
-    this.data = await req.json();
+    await this.$store.dispatch("summary/fetchSummary");
   },
 };
 </script>

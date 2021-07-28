@@ -6,15 +6,7 @@
   @apply invisible absolute;
 }
 
-.tooltip-right {
-  @apply relative;
-
-  .tooltip {
-    @apply right-0;
-  }
-}
-
 .has-tooltip:hover ~ .tooltip {
   @apply visible z-50 text-white px-3 py-2 text-sm rounded-sm opacity-90 bg-black text-left;
-  max-width: 180px;
+  max-width: 200px;
 }

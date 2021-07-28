@@ -1,16 +1,24 @@
 <template>
-  <div class="vaccination-card w-full bg-gray-100 p-6 grid gap-10">
-    <div class="flex flex-col">
+  <div class="w-full bg-gray-100 p-4 grid gap-6 grid-cols-8 col-span-full">
+    <div class="topic grid col-span-8 lg:col-span-2">
       <div class="text-gray-700">Vaccinations</div>
-      <h3 class="text-2xl font-bold">People vaccinated</h3>
-      <div class="text-gray-700 text-sm flex-1">
-        Up to and including 23 July 2021
-      </div>
-      <div>All vaccination data</div>
+      <div class="text-xl font-semibold">People vaccinated</div>
+      <div class="text-gray-700 text-sm">Up to and including {{ date }}</div>
+      <!-- <div class="font-medium">All vaccination data</div> -->
     </div>
-    <div class="w-full grid grid-cols-2 gap-8">
-      <div>
-        <div>Daily — 1st dose</div>
+    <div
+      class="
+        grid
+        col-span-8
+        md:col-span-4
+        lg:col-span-3
+        gap-4
+        grid-cols-2 grid-rows-2
+        items-end
+      "
+    >
+      <div v-for="(item, key) in doses" :key="key">
+        <div class="text-sm">{{ item.title }}</div>
         <span
           class="
             has-tooltip
@@ -18,63 +26,24 @@
             border-dashed border-b border-black
             cursor-help
           "
-          >99,999</span
+          >{{ item.value.toLocaleString() }}</span
         >
-        <div class="tooltip">
-          Number of people vaccinated (first dose) reported on {{ date }}
-        </div>
-      </div>
-      <div>
-        <div>Daily — 2nd dose</div>
-        <span
-          class="
-            has-tooltip
-            text-2xl
-            border-dashed border-b border-black
-            cursor-help
-          "
-          >99,999</span
-        >
-        <div class="tooltip">
-          Number of people vaccinated (second dose) reported on {{ date }}
-        </div>
-      </div>
-      <div>
-        <div>Total — 1st dose</div>
-        <span
-          class="
-            has-tooltip
-            text-2xl
-            border-dashed border-b border-black
-            cursor-help
-          "
-          >99,999</span
-        >
-        <div class="tooltip">
-          Total number of people vaccinated (first dose) up to and including
-          {{ date }}
-        </div>
-      </div>
-      <div>
-        <div>Total — 2nd dose</div>
-        <span
-          class="
-            has-tooltip
-            text-2xl
-            border-dashed border-b border-black
-            cursor-help
-          "
-          >99,999</span
-        >
-        <div class="tooltip">
-          Total number of people vaccinated (second dose) up to and including
-          {{ date }}
-        </div>
+        <div class="tooltip">{{ item.tooltip }} {{ date }}</div>
       </div>
     </div>
-    <div class="last grid gap-4 text-right">
-      <div>
-        <div class="mb-2">Percentage of adult population</div>
+    <div
+      class="
+        grid
+        col-span-8
+        md:col-span-4
+        lg:col-span-3
+        gap-4
+        visaulisation
+        items-end
+      "
+    >
+      <div class="justify-self-end text-right">
+        <div class="text-sm mb-2">Percentage of adult population</div>
         <div class="mb-2 tooltip-right">
           <span
             class="
@@ -84,14 +53,14 @@
               border-dashed border-b border-black
               cursor-help
             "
-            >88.0%</span
+            >{{ first.toFixed(1) }}%</span
           >
           <div class="tooltip">
             Percentage of adults vaccinated (first dose) reported on {{ date }}
           </div>
           <div class="flex flex-row items-center justify-end mt-2">
             <div class="legend bg-green-500 mr-1" />
-            <div>1st Dose</div>
+            <div class="text-sm">1st Dose</div>
           </div>
         </div>
         <div class="mb-2 tooltip-right">
@@ -103,55 +72,92 @@
               border-dashed border-b border-black
               cursor-help
             "
-            >69.9%</span
+            >{{ second.toFixed(1) }}%</span
           >
           <div class="tooltip">
-            Percentage of adults vaccinated (second dose) reported on 23 July
-            2021
+            Percentage of adults vaccinated (second dose) reported on {{ date }}
           </div>
           <div class="flex flex-row items-center justify-end mt-2">
             <div class="legend bg-green-800 mr-1" />
-            <div>2nd Dose</div>
+            <div class="text-sm">2nd Dose</div>
           </div>
         </div>
       </div>
-      <grid-chart :first="first" :second="second" />
+      <grid-chart :first="first" :second="second" class="col-auto" />
     </div>
   </div>
 </template>
 
 <script>
-import GridChart from "../../components/grid-chart/index.vue";
+import GridChart from "@/components/grid-chart/index.vue";
 
 export default {
+  props: {
+    data: Object,
+  },
   components: {
     "grid-chart": GridChart,
   },
   computed: {
+    pop() {
+      // return 32657400;
+      return 23409600;
+    },
     first() {
-      return 88;
+      return (this.data.dose1_cumul / this.pop) * 100;
     },
     second() {
-      return 69.9;
+      return (this.data.dose2_cumul / this.pop) * 100;
     },
     date() {
-      return "23 July 2021";
+      if (!this.data.latest_date) return "";
+      return new Date(this.data.latest_date).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    },
+    doses() {
+      return [
+        {
+          title: "Daily — 1st dose",
+          value: this.data.dose1_daily,
+          tooltip: "Number of people vaccinated (first dose) reported on ",
+        },
+        {
+          title: "Daily — 2nd dose",
+          value: this.data.dose2_daily,
+          tooltip: "Number of people vaccinated (second dose) reported on ",
+        },
+        {
+          title: "Total — 1st dose",
+          value: this.data.dose1_cumul,
+          tooltip:
+            "Total number of people vaccinated (first dose) up to and including ",
+        },
+        {
+          title: "Total — 2nd dose",
+          value: this.data.dose2_cumul,
+          tooltip:
+            "Total number of people vaccinated (second dose) up to and including ",
+        },
+      ];
     },
   },
 };
 </script>
 
-<style scoped>
-.vaccination-card {
-  grid-template-columns: auto 1fr auto;
+<style scoped lang="scss">
+.topic {
+  grid-template-rows: auto auto 1fr auto;
 }
 
-.vaccination-card .last {
+.visaulisation {
   grid-template-columns: 1fr auto;
-}
 
-.legend {
-  width: 12px;
-  height: 12px;
+  .legend {
+    width: 12px;
+    height: 12px;
+  }
 }
 </style>

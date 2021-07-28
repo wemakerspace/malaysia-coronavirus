@@ -1,6 +1,6 @@
 <template>
   <div class="grid grid-chart">
-    <div v-for="i in range" :key="i" :class="i" />
+    <div v-for="(i, key) in range" :key="key" :class="i" />
   </div>
 </template>
 

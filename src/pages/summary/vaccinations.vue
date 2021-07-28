@@ -15,11 +15,3 @@
     </p>
   </div>
 </template>
-
-<script>
-import Mixins from "./mixins.js";
-
-export default {
-  mixins: [Mixins],
-};
-</script>
