@@ -443,8 +443,8 @@ const generateSummaryChart = async (data, summary = {}) => {
     const label = (d.getDate() !== 1) ?
       "" : d.toLocaleString("en", {month: "short"});
     labels.push(label);
-    if (data.length - i >= 14) first[i - 7] = total / 7;
-    if (data.length - i <= 14) second[i - 7] = total / 7;
+    if (data.length - i >= 14) first[i - 7] = Math.round(total / 7);
+    if (data.length - i <= 14) second[i - 7] = Math.round(total / 7);
   }
   let secondBorderColor = "#383f43";
   let secondBackgroundColor = "#ebe9e7";
@@ -522,7 +522,7 @@ const computeSummary = (data) => {
 
 const getTestingSummary = async () => {
   const ref = db.ref("data/testing/malaysia");
-  const snapshot = await ref.limitToLast(180).once("value");
+  const snapshot = await ref.limitToLast(187).once("value");
   const data = [];
   snapshot.forEach((e) => {
     const value = e.val();
@@ -538,7 +538,7 @@ const getTestingSummary = async () => {
 
 const getCasesSummary = async () => {
   const ref = db.ref("data/cases/malaysia");
-  const snapshot = await ref.limitToLast(180).once("value");
+  const snapshot = await ref.limitToLast(187).once("value");
   const data = [];
   snapshot.forEach((e) => {
     const value = e.val();
@@ -554,7 +554,7 @@ const getCasesSummary = async () => {
 
 const getDeathsSummary = async () => {
   const ref = db.ref("data/deaths/malaysia");
-  const snapshot = await ref.limitToLast(180).once("value");
+  const snapshot = await ref.limitToLast(187).once("value");
   const data = [];
   snapshot.forEach((e) => {
     const value = e.val();
@@ -570,7 +570,7 @@ const getDeathsSummary = async () => {
 
 const getVaccinationsSummary = async () => {
   const ref = db.ref("data/vaccinations/malaysia");
-  const snapshot = await ref.limitToLast(180).once("value");
+  const snapshot = await ref.limitToLast(187).once("value");
   const data = [];
   snapshot.forEach((e) => {
     const value = e.val();
@@ -589,7 +589,7 @@ const getVaccinationsSummary = async () => {
 
 const getHospitalSummary = async () => {
   const ref = db.ref("data/healthcare/hospital/malaysia");
-  const snapshot = await ref.limitToLast(180).once("value");
+  const snapshot = await ref.limitToLast(187).once("value");
   const data = [];
   snapshot.forEach((e) => {
     const value = e.val();
@@ -605,7 +605,7 @@ const getHospitalSummary = async () => {
 
 const getICUSummary = async () => {
   const ref = db.ref("data/healthcare/icu/malaysia");
-  const snapshot = await ref.limitToLast(180).once("value");
+  const snapshot = await ref.limitToLast(187).once("value");
   const icuData = [];
   const icuVentData = [];
   snapshot.forEach((e) => {
@@ -628,7 +628,7 @@ const getICUSummary = async () => {
 
 const getPKRCSummary = async () => {
   const ref = db.ref("data/healthcare/pkrc/malaysia");
-  const snapshot = await ref.limitToLast(180).once("value");
+  const snapshot = await ref.limitToLast(187).once("value");
   const data = [];
   snapshot.forEach((e) => {
     const value = e.val();
