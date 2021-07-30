@@ -37,7 +37,7 @@
       >.
     </div>
     <div>
-      This website based on
+      This website is based on
       <a href="https://coronavirus.data.gov.uk/" target="_blank" rel="noopener"
         >Coronavirus (COVID-19) in the UK</a
       >.

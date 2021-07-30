@@ -63,4 +63,4 @@ The project is published under the [MIT license](https://github.com/limhenry/mal
 
 ## Credits
 
-This project is based on the [UK's Coronavirus Dashboard](https://coronavirus.data.gov.uk).
+This project is based on [UK's Coronavirus Dashboard](https://coronavirus.data.gov.uk).
